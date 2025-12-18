@@ -20,8 +20,8 @@ export default defineBackground(() => {
       const u = new URL(url);
       if (!u.hostname.includes("linkedin.com")) return false;
       const path = u.pathname || "";
-      console.log("path value: ",path);
-      
+      console.log("path value: ", path);
+
       return (
         path.startsWith("/login") ||
         path.startsWith("/checkpoint/") ||
@@ -45,17 +45,13 @@ export default defineBackground(() => {
     }
   };
 
-  const isLinkedInLandingUrl = (url) => {
+  const isLinkedInFeedUrl = (url) => {
     if (!url) return false;
     try {
       const u = new URL(url);
       if (!u.hostname.includes("linkedin.com")) return false;
-      const parts = u.pathname.split("/").filter(Boolean);
-      // Treat only the locale landing variant like /in/?_l=en_US as "landing".
-      // A real profile at /in/<accountId>/ should NOT match here.
-      const isInRoot = parts.length === 1 && parts[0] === "in";
-      const hasLocaleParam = u.searchParams.has("_l");
-      return isInRoot && hasLocaleParam;
+      const path = u.pathname || "";
+      return path.startsWith("/feed");
     } catch {
       return false;
     }
@@ -67,57 +63,29 @@ export default defineBackground(() => {
     const url = changeInfo.url || tab.url;
     if (!url || !url.includes("linkedin.com")) return;
 
-    // When /in resolves to a generic landing page (e.g. /in/?_l=en_US),
-    // the user is not logged in. Redirect this tab to the login page and
-    if (isLinkedInLandingUrl(url)) {
-      try {
-        await browser.tabs.create({
-          url: "https://www.linkedin.com/login",
-          active: true,
-        });
-        
-        linkedinConnectWaitingForLogin = true;
-        linkedinConnectRetriedProfile = false;
-      } catch (error) {
-        console.warn(
-          "[privAI][background] Failed to redirect LinkedIn tab to login",
-          error
-        );
-        linkedinConnectTabId = null;
-        linkedinConnectWaitingForLogin = false;
-        linkedinConnectRetriedProfile = false;
-        linkedinConnectInProgress = false;
-      }
-      return;
-    }
-    console.log("Sending this url: ",url);
-    
     // If we're on login, wait for the user to complete login.
     if (isLinkedInLoginUrl(url)) {
       linkedinConnectWaitingForLogin = true;
       return;
     }
-    
-    console.log("After login wait");
-    console.log(changeInfo);
-    console.log("Waiting status: ",linkedinConnectWaitingForLogin);
-    console.log("Retried profile status: ",linkedinConnectRetriedProfile);
-    
-    // After login completes (URL changes away from login), retry opening /in once.
+
+    // Once we see /feed while waiting, the user is logged in (or was already
+    // logged in). From here, go to /in to resolve to their profile.
     if (
       linkedinConnectWaitingForLogin &&
       !linkedinConnectRetriedProfile &&
-      changeInfo.status === "complete" &&
-      !isLinkedInLoginUrl(url)
+      isLinkedInFeedUrl(url) &&
+      changeInfo.status === "complete"
     ) {
       linkedinConnectRetriedProfile = true;
+      linkedinConnectWaitingForLogin = false;
       try {
         await browser.tabs.update(tabId, {
           url: "https://www.linkedin.com/in/",
         });
       } catch (error) {
         console.warn(
-          "[privAI][background] Failed to reopen LinkedIn /in profile",
+          "[privAI][background] Failed to navigate to LinkedIn /in profile",
           error
         );
         linkedinConnectTabId = null;
@@ -171,7 +139,11 @@ export default defineBackground(() => {
         try {
           linkedinConnectInProgress = true;
           const createdTab = await browser.tabs.create({
-            url: "https://linkedin.com/in/",
+            // Start from /login:
+            // - If already logged in, LinkedIn redirects to /feed
+            // - If not logged in, user completes login, then redirects to /feed
+            // In both cases we watch for /feed, then go to /in.
+            url: "https://www.linkedin.com/login",
             active: true,
           });
 
@@ -184,7 +156,7 @@ export default defineBackground(() => {
           }
 
           linkedinConnectTabId = createdTab.id;
-          linkedinConnectWaitingForLogin = false;
+          linkedinConnectWaitingForLogin = true;
           linkedinConnectRetriedProfile = false;
         } catch (error) {
           console.warn(
