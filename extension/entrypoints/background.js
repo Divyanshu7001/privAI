@@ -233,11 +233,8 @@ export default defineBackground(() => {
         accountName,
       });
 
-      const stateAfterSave = await loadPlatformsState();
-      console.log(
-        "[privAI][background] State after save:",
-        stateAfterSave[platform]
-      );
+      //const stateAfterSave = await loadPlatformsState();
+      
     }
   });
 });

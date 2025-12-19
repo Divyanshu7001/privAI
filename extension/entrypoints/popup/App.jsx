@@ -18,6 +18,7 @@ import {
 function App() {
   const [platforms, setPlatforms] = useState(INITIAL_PLATFORMS);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [monitoringAllowed, setMonitoringAllowed] = useState(false); // false by default until user authorizes
   const themeStyles = useThemeStyles();
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
@@ -26,6 +27,26 @@ function App() {
     (async () => {
       try {
         const stored = await loadPlatformsState();
+        // Load monitoring consent flag (if present) from browser storage.
+        if (typeof browser !== "undefined" && browser.storage?.local) {
+          try {
+            const { monitoringAllowed: storedConsent } =
+              await browser.storage.local.get("monitoringAllowed");
+            if (typeof storedConsent === "boolean") {
+              setMonitoringAllowed(storedConsent);
+            } else {
+              setMonitoringAllowed(false);
+            }
+          } catch (error) {
+            console.warn(
+              "[privAI][popup] Failed to load monitoring consent from storage",
+              error
+            );
+            setMonitoringAllowed(false);
+          }
+        } else {
+          setMonitoringAllowed(false);
+        }
         setPlatforms((prev) => {
           const next = { ...prev };
           for (const key of Object.keys(prev)) {
@@ -49,7 +70,22 @@ function App() {
     })();
   }, []);
 
+  const persistMonitoringAllowed = async (value) => {
+    setMonitoringAllowed(value);
+    if (typeof browser !== "undefined" && browser.storage?.local) {
+      try {
+        await browser.storage.local.set({ monitoringAllowed: value });
+      } catch (error) {
+        console.warn(
+          "[privAI][popup] Failed to persist monitoring consent to storage",
+          error
+        );
+      }
+    }
+  };
+
   const handleToggle = async (key) => {
+    if (!monitoringAllowed) return;
     let nextState;
     setPlatforms((prev) => {
       const current = prev[key];
@@ -86,6 +122,7 @@ function App() {
   };
 
   const handleConnect = async (key) => {
+    if (!monitoringAllowed) return;
     let nextState;
     setPlatforms((prev) => {
       const current = prev[key];
@@ -185,6 +222,25 @@ function App() {
           </div>
         </header>
 
+        {!monitoringAllowed && (
+          <div className="mt-2 rounded-lg border border-amber-400 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
+            <p className="mb-1 font-medium">
+              Monitoring is currently disabled.
+            </p>
+            <p className="mb-2">
+              To let privAI watch your social posts and transcribe videos,
+              please allow monitoring.
+            </p>
+            <button
+              type="button"
+              onClick={() => persistMonitoringAllowed(true)}
+              className="rounded-full bg-amber-500 px-3 py-1 text-[11px] font-medium text-white hover:bg-amber-600"
+            >
+              Authorize monitoring
+            </button>
+          </div>
+        )}
+
         <ThemeSelector open={themeOpen} onClose={() => setThemeOpen(false)} />
 
         <section className="mt-3 flex flex-col gap-3">
@@ -260,6 +316,7 @@ function App() {
                       <button
                         type="button"
                         onClick={() => handleToggle(key)}
+                        disabled={!monitoringAllowed}
                         className={
                           platform.enabled
                             ? isLight
@@ -276,10 +333,19 @@ function App() {
                       <button
                         type="button"
                         onClick={() => handleConnect(key)}
+                        disabled={!monitoringAllowed}
                         className={
                           isLight
-                            ? "rounded-full border border-zinc-500 px-3 py-1 text-[11px] font-medium text-black"
-                            : "rounded-full border border-white/40 px-3 py-1 text-[11px] font-medium text-zinc-100 hover:border-white hover:bg-white/10"
+                            ? `rounded-full border px-3 py-1 text-[11px] font-medium text-black ${
+                                !monitoringAllowed
+                                  ? "border-zinc-300 text-zinc-400 cursor-not-allowed"
+                                  : "border-zinc-500"
+                              }`
+                            : `rounded-full border px-3 py-1 text-[11px] font-medium text-zinc-100 ${
+                                !monitoringAllowed
+                                  ? "border-white/10 text-zinc-500 cursor-not-allowed"
+                                  : "border-white/40 hover:border-white hover:bg-white/10"
+                              }`
                         }
                       >
                         Connect
