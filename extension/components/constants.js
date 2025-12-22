@@ -1,5 +1,7 @@
 import { FaFacebook, FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
 
+export const PLATFORMS = ["linkedin", "facebook", "instagram", "twitter", "x"];
+
 export const INITIAL_PLATFORMS = {
   facebook: { name: "Facebook", connected: false, enabled: false },
   instagram: { name: "Instagram", connected: false, enabled: false },
