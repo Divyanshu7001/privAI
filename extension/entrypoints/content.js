@@ -1,38 +1,27 @@
-import { monitoringInitializer } from "./content/monitoring-helpers";
-import { getAccountInfo } from "./content/account-helpers";
+import { monitoringInitializer } from "../components/content/monitoring-helpers";
+import { getAccountInfo } from "../components/content/account-helpers";
 
 // Attach listener as soon as the content script loads
 browser.runtime.onMessage.addListener((message) => {
+  let siteName = null,
+    info = null;
   if (message?.type === "privai:requestLinkedInAccount") {
-    const info = getAccountInfo("linkedin");
-    if (info?.accountId) {
-      browser.runtime.sendMessage({
-        type: "privai:finishConnect",
-        platform: "linkedin",
-        accountId: info.accountId,
-        accountName: info.accountName,
-      });
-    }
+    info = getAccountInfo("linkedin");
+    siteName = "linkedin";
   } else if (message?.type === "privai:requestFacebookAccount") {
-    const info = getAccountInfo("facebook");
-    if (info?.accountId) {
-      browser.runtime.sendMessage({
-        type: "privai:finishConnect",
-        platform: "facebook",
-        accountId: info.accountId,
-        accountName: info.accountName,
-      });
-    }
+    info = getAccountInfo("facebook");
+    siteName = "facebook";
   } else if (message?.type === "privai:requestInstagramAccount") {
-    const info = getAccountInfo("instagram");
-    if (info?.accountId) {
-      browser.runtime.sendMessage({
-        type: "privai:finishConnect",
-        platform: "instagram",
-        accountId: info.accountId,
-        accountName: info.accountName,
-      });
-    }
+    info = getAccountInfo("instagram");
+    siteName = "instagram";
+  }
+  if (info?.accountId) {
+    browser.runtime.sendMessage({
+      type: "privai:finishConnect",
+      platform: siteName,
+      accountId: info.accountId,
+      accountName: info.accountName,
+    });
   }
 });
 

@@ -1,5 +1,4 @@
-import { loadPlatformsState } from "../shared/platformStorage.js";
-import { PLATFORMS } from "../../components/constants.js";
+import { PLATFORMS, loadPlatformsState } from "../shared/constants.js";
 import {
   getActiveComposerText,
   logPostOrComment,

@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { STORAGE_KEY, THEME_OPTIONS, THEME_STYLES } from "./constants.js";
+import {
+  STORAGE_KEY,
+  THEME_OPTIONS,
+  THEME_STYLES,
+} from "../shared/constants.js";
 
 const ThemeContext = createContext({
   theme: "system",
@@ -72,7 +76,6 @@ export function ThemeProvider({ children }) {
 export function useTheme() {
   return useContext(ThemeContext);
 }
-
 
 export function useThemeStyles() {
   const { resolvedTheme } = useTheme();

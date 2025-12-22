@@ -4,16 +4,14 @@ import {
   ThemeSelector,
   useThemeStyles,
   useTheme,
-} from "./../../components/Theme.jsx";
+} from "../../components/ui/Theme.jsx";
 import {
   INITIAL_PLATFORMS,
   PLATFORM_ICONS,
   PLATFORM_COLORS,
-} from "./../../components/constants.js";
-import {
   loadPlatformsState,
   savePlatformsState,
-} from "../shared/platformStorage";
+} from "../../components/shared/constants.js";
 
 function App() {
   const [platforms, setPlatforms] = useState(INITIAL_PLATFORMS);
