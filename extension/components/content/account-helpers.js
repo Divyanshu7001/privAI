@@ -89,6 +89,33 @@ export const getAccountInfo = (siteName) => {
         !username ||
         ["explore", "reels", "direct", "p", "accounts"].includes(username)
       ) {
+        // Try DOM fallback (profile link in header) when on feed or other pages
+        const anchors = Array.from(document.querySelectorAll('a[href^="/"]'));
+        const exclude = [
+          "explore",
+          "reels",
+          "direct",
+          "p",
+          "accounts",
+          "explore",
+          "tags",
+        ];
+        for (const a of anchors) {
+          try {
+            const href = a.getAttribute("href");
+            if (!href || !href.startsWith("/")) continue;
+            const partsA = href.split("/").filter(Boolean);
+            if (!partsA.length) continue;
+            const candidate = partsA[0];
+            if (exclude.includes(candidate)) continue;
+            // Basic username sanity check: not too long, alphanumeric + . _ -
+            if (/^[A-Za-z0-9._-]{2,30}$/.test(candidate)) {
+              return { accountId: candidate, accountName: candidate };
+            }
+          } catch {
+            // ignore
+          }
+        }
         return null;
       }
 
