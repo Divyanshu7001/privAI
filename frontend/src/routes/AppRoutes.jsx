@@ -26,10 +26,13 @@ function AppRoutes() {
         <Route path="/register" element={<SignupPage />} />
         <Route
           path="/dashboard"
+          // element={
+          //   <ProtectedRoute>
+          //     <DashboardPage />
+          //   </ProtectedRoute>
+          // }
           element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
+            <DashboardPage />
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

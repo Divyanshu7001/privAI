@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import Input from "../components/common/Input";
@@ -20,23 +20,23 @@ function ProgressBar({ current }) {
             <div
               className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition ${
                 completed
-                  ? "bg-emerald-400 text-slate-950"
+                  ? "bg-emerald-500 text-slate-950"
                   : active
-                  ? "bg-brand text-white"
-                  : "bg-slate-800 text-slate-400"
+                  ? "bg-brand text-text-primary"
+                  : "bg-border text-text-secondary"
               }`}
             >
               {stepNumber}
             </div>
             <span
               className={`text-xs sm:text-sm transition ${
-                completed || active ? "text-slate-100" : "text-slate-500"
+                completed || active ? "text-text-primary" : "text-text-secondary/50"
               }`}
             >
               {label}
             </span>
             {idx !== STEPS.length - 1 && (
-              <div className="hidden sm:block flex-1 h-px bg-slate-800 mx-2" />
+              <div className="hidden sm:block flex-1 h-px bg-border mx-2" />
             )}
           </div>
         );
@@ -45,10 +45,32 @@ function ProgressBar({ current }) {
   );
 }
 
+
 function SignupPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Sync theme on mount
+  useEffect(() => {
+    const activeTheme = localStorage.getItem("privai-theme") || "system";
+    const root = document.documentElement;
+    root.classList.remove("theme-light", "theme-purple", "theme-teal");
+    
+    if (activeTheme === "light") {
+      root.classList.add("theme-light");
+    } else if (activeTheme === "purple") {
+      root.classList.add("theme-purple");
+    } else if (activeTheme === "teal") {
+      root.classList.add("theme-teal");
+    } else if (activeTheme === "system") {
+      const systemIsDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (!systemIsDark) {
+        root.classList.add("theme-light");
+      }
+    }
+  }, []);
+
 
   const [form, setForm] = useState({
     workEmail: "",
@@ -161,28 +183,30 @@ function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-8 lg:flex-row lg:py-12">
-        <aside className="lg:w-5/12 space-y-4">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-violet-500 to-fuchsia-500 flex items-center justify-center">
-              <span className="text-xs font-bold text-slate-950">PM</span>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background text-text-primary transition-colors duration-200">
+      <div className="w-full max-w-4xl grid md:grid-cols-12 gap-8 items-start">
+        {/* Left Side Info */}
+        <aside className="md:col-span-5 space-y-4 text-left">
+          <Link to="/" className="inline-flex items-center gap-2 mb-2">
+            <div className="h-8 w-8 rounded-xl bg-brand flex items-center justify-center shadow-lg shadow-brand/20">
+              <span className="text-xs font-bold text-text-primary">PM</span>
             </div>
-            <span className="text-sm font-semibold tracking-tight">
+            <span className="text-sm font-semibold tracking-tight text-text-primary">
               Privacy Monitor
             </span>
           </Link>
 
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-text-primary">
             Create your account
           </h1>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-text-secondary">
             Set up your monitoring profile in three simple steps. Your work email stays separate from your monitored data.
           </p>
         </aside>
 
-        <main className="lg:w-7/12">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+        {/* Right Side Card Form */}
+        <main className="md:col-span-7 w-full">
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
             <form onSubmit={handleSignupSubmit} className="space-y-6">
               <ProgressBar current={step} />
 
@@ -497,12 +521,12 @@ function SignupPage() {
                 )}
               </div>
 
-              <div className="pt-4 border-t border-slate-800">
-                <p className="text-xs text-slate-400 text-center">
+              <div className="pt-4 border-t border-border">
+                <p className="text-xs text-text-secondary text-center">
                   Already have an account?{" "}
                   <Link
                     to="/login"
-                    className="text-cyan-300 hover:text-cyan-200 font-semibold"
+                    className="text-brand hover:text-brand-secondary font-semibold"
                   >
                     Sign in
                   </Link>
@@ -514,6 +538,7 @@ function SignupPage() {
       </div>
     </div>
   );
+
 }
 
 export default SignupPage;

@@ -7,11 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: "var(--bg-color)",
+        card: "var(--card-bg)",
+        border: "var(--border-color)",
+        "text-primary": "var(--text-primary)",
+        "text-secondary": "var(--text-secondary)",
         brand: {
-          DEFAULT: "#6366f1",
+          DEFAULT: "var(--accent-color)",
+          secondary: "var(--accent-secondary)",
         },
+      },
+      fontFamily: {
+        sans: ["var(--font-family)", "system-ui", "sans-serif"],
+        mono: ["var(--mono-font)", "monospace"],
       },
     },
   },
   plugins: [],
 };
+

@@ -134,3 +134,141 @@ export const logoutUser = () => {
   // In real app, you might also call: await fetch(`${API_BASE_URL}/auth/logout`, { method: "POST" });
 };
 
+// Change user password
+export const updatePassword = async (currentPassword, newPassword) => {
+  try {
+    const raw = localStorage.getItem("pm_user");
+    if (!raw) throw new Error("No user found");
+    const user = JSON.parse(raw);
+    if (user.auth.password !== currentPassword) {
+      throw new Error("Current password is incorrect");
+    }
+    user.auth.password = newPassword;
+    localStorage.setItem("pm_user", JSON.stringify(user));
+    return { success: true, message: "Password updated successfully" };
+  } catch (error) {
+    throw new Error(error.message || "Failed to update password");
+  }
+};
+
+// Delete user account
+export const deleteAccount = async () => {
+  try {
+    localStorage.removeItem("pm_user");
+    localStorage.removeItem("pm_token");
+    localStorage.removeItem("privai-theme");
+    return { success: true };
+  } catch (error) {
+    throw new Error("Failed to delete account");
+  }
+};
+
+// Get Exceptions list
+export const getExceptions = async () => {
+  try {
+    const raw = localStorage.getItem("pm_user");
+    if (!raw) throw new Error("No user found");
+    const user = JSON.parse(raw);
+    if (!user.exceptions) {
+      // Seed default exceptions
+      user.exceptions = {
+        name: true,
+        personalEmail: true,
+        workEmail: false,
+        phone: false,
+        workAddress: false,
+        custom: ["Dr. Alexander", "johndoe@company.com"]
+      };
+      localStorage.setItem("pm_user", JSON.stringify(user));
+    }
+    return user.exceptions;
+  } catch (error) {
+    throw new Error("Failed to get exceptions");
+  }
+};
+
+// Update Exceptions list
+export const updateExceptions = async (exceptions) => {
+  try {
+    const raw = localStorage.getItem("pm_user");
+    if (!raw) throw new Error("No user found");
+    const user = JSON.parse(raw);
+    user.exceptions = exceptions;
+    localStorage.setItem("pm_user", JSON.stringify(user));
+    return exceptions;
+  } catch (error) {
+    throw new Error("Failed to update exceptions");
+  }
+};
+
+// Seed mock incidents list
+export const getIncidents = async () => {
+  try {
+    const rawIncidents = localStorage.getItem("pm_incidents");
+    if (!rawIncidents) {
+      const seed = [
+        {
+          id: "1",
+          type: "Posting",
+          platform: "linkedin",
+          title: "Work email (johndoe@company.com) detected in composer",
+          action: "acknowledged", // ignored, acknowledged
+          date: "2026-07-10T14:32:00Z"
+        },
+        {
+          id: "2",
+          type: "Feed",
+          platform: "facebook",
+          title: "Personal phone number found in comment input",
+          action: "ignored",
+          date: "2026-07-09T09:15:00Z"
+        },
+        {
+          id: "3",
+          type: "Posting",
+          platform: "twitter",
+          title: "Home address coordinates leaked in tweet draft",
+          action: "acknowledged",
+          date: "2026-07-08T18:44:00Z"
+        },
+        {
+          id: "4",
+          type: "Posting",
+          platform: "instagram",
+          title: "Unencrypted passcode in text file video frame",
+          action: "acknowledged",
+          date: "2026-07-06T11:20:00Z"
+        },
+        {
+          id: "5",
+          type: "Feed",
+          platform: "linkedin",
+          title: "Confidential project name in post comment",
+          action: "ignored",
+          date: "2026-07-05T15:02:00Z"
+        }
+      ];
+      localStorage.setItem("pm_incidents", JSON.stringify(seed));
+      return seed;
+    }
+    return JSON.parse(rawIncidents);
+  } catch (error) {
+    throw new Error("Failed to get incidents");
+  }
+};
+
+// Update action for a specific incident
+export const updateIncidentAction = async (id, action) => {
+  try {
+    const incidents = await getIncidents();
+    const updated = incidents.map((inc) =>
+      inc.id === id ? { ...inc, action } : inc
+    );
+    localStorage.setItem("pm_incidents", JSON.stringify(updated));
+    return updated;
+  } catch (error) {
+    throw new Error("Failed to update incident action");
+  }
+};
+
+
