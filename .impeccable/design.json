@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-11T03:13:46Z",
+  "title": "Design System: privAI",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Active Violet",
+        "canonical": "oklch(56% 0.25 285)",
+        "tonalRamp": [
+          "#1c0d6a",
+          "#341d99",
+          "#4d34c7",
+          "#6e52f6",
+          "#907cf3",
+          "#b3a5f6",
+          "#d0c7f9",
+          "#ece9fc"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Telemetry Sky",
+        "canonical": "oklch(67% 0.16 230)",
+        "tonalRamp": [
+          "#075985",
+          "#0369a1",
+          "#0284c7",
+          "#0ea5e9",
+          "#38bdf8",
+          "#7dd3fc",
+          "#bae6fd",
+          "#e0f2fe"
+        ]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Deep Void",
+        "canonical": "oklch(12% 0.03 260)",
+        "tonalRamp": [
+          "#020617",
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#64748b",
+          "#cbd5e1",
+          "#f1f5f9",
+          "#f8fafc"
+        ]
+      },
+      "neutral-card": {
+        "role": "neutral",
+        "displayName": "Surface Card",
+        "canonical": "oklch(18% 0.03 260)",
+        "tonalRamp": [
+          "#090d16",
+          "#0f172a",
+          "#1c283f",
+          "#2e3e59",
+          "#526787",
+          "#9fb0c8",
+          "#dae3ee",
+          "#f1f5f9"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Text",
+        "purpose": "Marketing page main display headlines."
+      },
+      "headline": {
+        "displayName": "Headline Text",
+        "purpose": "Dashboard headings and section titles."
+      },
+      "title": {
+        "displayName": "Title Text",
+        "purpose": "Card headers and list groups."
+      },
+      "body": {
+        "displayName": "Body Copy",
+        "purpose": "Paragraphs and descriptions."
+      },
+      "label": {
+        "displayName": "Label UI",
+        "purpose": "Buttons, tabs, badges, table headers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-glow",
+        "value": "0 4px 20px rgba(110, 82, 246, 0.08)",
+        "purpose": "Hover highlights on primary buttons and high-risk notifications."
+      }
+    ],
+    "motion": [
+      {
+        "name": "fade-fast",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Instant transition for active hover states and state toggles."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard call-to-action button for dashboard events and approvals.",
+      "html": "<button class=\"ds-btn-primary\">Confirm and Allow</button>",
+      "css": ".ds-btn-primary { background: #6e52f6; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; padding: 10px 20px; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s ease, box-shadow 0.15s ease; } .ds-btn-primary:hover { background: #5b3fe0; box-shadow: 0 4px 20px rgba(110, 82, 246, 0.15); } .ds-btn-primary:focus-visible { outline: 2px solid #6e52f6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions that sit on card borders.",
+      "html": "<button class=\"ds-btn-outline\">View History</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #94a3b8; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; font-weight: 600; padding: 10px 20px; border: 1px solid #1e293b; border-radius: 12px; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; } .ds-btn-outline:hover { background: #1e293b; color: #f8fafc; }"
+    },
+    {
+      "name": "Standard Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Base panel container holding graphs, tables, and settings blocks.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Exposure Incidents</h3><p class=\"ds-card-body\">No issues identified this month.</p></div>",
+      "css": ".ds-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-card-title { font-size: 1.25rem; font-weight: 600; color: #f8fafc; margin: 0 0 8px 0; } .ds-card-body { font-size: 0.875rem; color: #94a3b8; margin: 0; }"
+    },
+    {
+      "name": "Standard Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Form inputs for PII text fields.",
+      "html": "<input type=\"text\" class=\"ds-input\" placeholder=\"e.g., username@work.com\" />",
+      "css": ".ds-input { width: 100%; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 10px 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.875rem; color: #f8fafc; outline: none; transition: border-color 0.15s ease; } .ds-input::placeholder { color: #475569; } .ds-input:focus { border-color: #6e52f6; }"
+    },
+    {
+      "name": "Status Badge - Success",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Indicates safe states and active monitoring channels.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Active</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; } .ds-badge-success { color: #10b981; background: rgba(16, 185, 129, 0.15); }"
+    },
+    {
+      "name": "Status Badge - Danger",
+      "kind": "chip",
+      "refersTo": "badge-danger",
+      "description": "Indicates active risk exposures and failures.",
+      "html": "<span class=\"ds-badge ds-badge-danger\">High Risk</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; } .ds-badge-danger { color: #ef4444; background: rgba(239, 68, 68, 0.15); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Shield",
+    "overview": "The privAI visual system is a minimalist, developer-grade dark interface designed to evoke absolute security and reassuring utility. The design architecture is directly adapted from the layout structure of clean healthcare analytics systems (specifically drawing inspiration from the structured card grids and spatial division of the Xenity Dashboard) but re-imagined as a highly focused dark utility.\n\nIt operates as an unobtrusive assistant. The system remains dark and calm, utilizing vibrant violet and cyan accents for telemetry and state indicators. Primary controls are highly visible, and alert/status states introduce visual prominence only when critical PII data leaks are imminent.",
+    "keyCharacteristics": [
+      "Spatial Order: Defined sidebar navigation, consistent layout gaps (16px/24px), and clear grid divisions.",
+      "Vibrant Accent Strategy: Neutral dark surfaces punctuated by a single deep purple/violet primary color and sky-blue telemetry indicators.",
+      "Tactile Shapes: Highly curved panels (16px) with clean borders (1px) that frame information without causing visual clutter.",
+      "Diagnostic Badges: Semi-bold status signals that frame state conditions cleanly."
+    ],
+    "rules": [
+      {
+        "name": "The Rarity Rule",
+        "body": "Vibrant accents (Active Violet and Telemetry Sky) must carry less than 10% of any given screen's area. Accent colors represent intent and interaction, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tinted State Rule",
+        "body": "All diagnostic alerts (Success, Warning, Danger) must use high-contrast text overlaying a low-opacity background fill (10–15% opacity of the base hue) to maintain readability without overwhelming the canvas.",
+        "section": "colors"
+      },
+      {
+        "name": "The Monospace PII Rule",
+        "body": "Any raw user data value that is monitored (emails, phone numbers, addresses, composer snippets) must be rendered in JetBrains Mono to clearly distinguish user data inputs from UI navigation controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Canvas Rule",
+        "body": "Containers and cards are flat at rest. Subtle shadows or ambient glows are exclusively reserved for interactive hover states or triggered danger alerts.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do wrap every monitored PII value in a monospace tag using JetBrains Mono.",
+      "Do default to instant or basic crossfade transitions (duration ≤ 150ms) to respect system motion preferences.",
+      "Do maintain a strict 4.5:1 text-to-background contrast ratio on all body descriptions and labels.",
+      "Do align the sidebar navigation items vertically, mirroring the Xenity dashboard structure."
+    ],
+    "donts": [
+      "Don't use overly bright, multi-colored gradients for panels or cards (avoid the 2023 gradient SaaS style).",
+      "Don't use colored side-stripe borders (e.g. border-left-4) as accents on cards.",
+      "Don't use glassmorphism or blur elements on standard cards—keep backgrounds solid.",
+      "Don't animate image overlays or logo elements on hover actions."
+    ]
+  }
+}
