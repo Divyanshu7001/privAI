@@ -2,118 +2,185 @@
 
 Saving you from sharing private info online.
 
-## Problem statement
+`privAI` is a browser-extension-based privacy assistant that monitors what a user is about to post on supported social platforms (LinkedIn, Facebook, Instagram, Twitter/X) and runs client-side checks (with local ML assistance) to flag sensitive information before it is published.
 
-People often expose private or sensitive information on social media without realizing how easily it can be weaponized (OSINT-based profiling, doxxing, identity theft, targeted harassment, account takeover, etc.). The goal of this project is to reduce that risk by detecting potentially sensitive disclosures _before_ a post/comment is published.
+---
 
-## What this project is trying to do
+## 🏗️ Architecture & Interaction Flow
 
-`privAI` is a browser-extension-based system that monitors what a user is about to post on supported social platforms and runs client-side checks (and optional local ML assistance) to highlight content that may expose the user.
+The project is structured into three main sub-systems:
+1. **Browser Extension (`extension/`)**: Watches composer fields in real time, intercepts submission clicks, scrapes video files for transcription, and manages the user's active social platform links.
+2. **Web Frontend (`frontend/`)**: A React dashboard where users can define their private profiles (work email, personal emails, phone numbers) and review monthly risk timeline stats.
+3. **ML Backend (`ml-backend/`)**: A FastAPI Python service that hosts Faster-Whisper to transcribe video audio and runs a placeholder risk-scoring classifier.
 
-The core idea is:
+### High-Level Component Topology
+```mermaid
+graph TD
+    subgraph Browser Extension
+        Popup[Popup React UI]
+        CS[Content Script Scrapers]
+        BG[Background Event Listeners]
+    end
 
-- Observe the content the user is about to publish (text today; video/voice via transcription; images later).
-- Identify “risky” snippets (PII, credentials, personal identifiers, location hints, etc.).
-- Warn the user (and later: optionally block or require confirmation) before the platform receives the content.
+    subgraph Frontend Dashboard
+        DashPage[Dashboard Page]
+        AuthPage[Login/Signup Pages]
+        APIClient[Axios API Client]
+    end
 
-## How it works (current architecture)
+    subgraph ML Backend FastAPI
+        Transcribe[Video Transcriber]
+        RiskScoring[Risk Scorer Stub]
+    end
 
-High-level flow:
+    subgraph Shared Backend Node.js
+        NodeAPI[Port 3001 API]
+        MailSender[Nodemailer Notification]
+    end
 
-1. **Browser extension content script** watches for user actions like “Post / Share / Tweet / Reply / Send”.
-2. It extracts the active composer text (`div[role='textbox']`).
-3. If a video element is present, it can fetch the video blob and send it to a **local** ML service for transcription.
-4. A (planned) risk-scoring step classifies the text/transcript into a risk level (none/low/medium/high) and surfaces that in the extension UI.
+    CS -->|Fetch video transcription| Transcribe
+    Popup -->|Save monitoring state| ExtStorage[(Extension Storage)]
+    BG -->|Read/Write platform state| ExtStorage
+    DashPage -->|Monitors PII profile settings| APIClient
+    APIClient -->|Mock fallback| LocalStorage[(Web LocalStorage)]
+    APIClient -.->|Planned Integration| NodeAPI
+    RiskScoring -.->|Notify Med/High Risk| NodeAPI
+    NodeAPI -->|Send email notification| MailSender
+```
 
-Current ML endpoints in the repo:
+### Flow 1: Platform Connection Sequence
+When a user clicks "Connect" on a social platform inside the extension popup, `privAI` automates account correlation:
+```mermaid
+sequenceDiagram
+    participant User
+    participant ExtUI as Extension Popup
+    participant Background as Extension Background
+    participant Content as Content Script
+    participant Social as Social Media Page
+    participant DB as Extension Storage
 
-- `POST /transcribe-video` — accepts an uploaded `.mp4`, uses `ffmpeg` to extract audio, transcribes with Faster-Whisper.
-- `POST /analyze-risk` — stubbed endpoint intended to call a fine-tuned risk model and optionally notify an external service for medium/high risk.
+    User->>ExtUI: Click Connect
+    ExtUI->>Background: privai:startConnect
+    Background->>Social: Open profile page/login in new tab
+    Social-->>Content: Page loads
+    Background->>Content: privai:request<Platform>Account
+    Content->>Social: Scrape username/ID from DOM
+    Content->>Background: privai:finishConnect (accountId, accountName)
+    Background->>DB: Save platform state to local storage (connected: true, monitor: true)
+```
 
-## What’s implemented vs. what’s left
+### Flow 2: Post & Video Monitoring Sequence
+When monitoring is active, the content script intercepts post publications:
+```mermaid
+sequenceDiagram
+    participant User
+    participant Social as Social Media Page
+    participant Content as Content Script
+    participant ML as ML Backend (FastAPI)
 
-### Implemented (prototype/in-progress)
+    User->>Social: Clicks "Post/Share/Tweet"
+    Content->>Social: Intercepts click event
+    Content->>Social: Extracts active composer text (div[role='textbox'])
+    Content->>Social: Detects & fetches video blob (if present)
+    Content->>ML: POST /transcribe-video (FormData)
+    ML->>ML: FFmpeg audio extraction & Faster-Whisper transcription
+    ML-->>Content: Return transcribed text
+    Content-->>Content: Log text & transcript (risk scoring stubbed)
+```
 
-- Platform monitoring hooks for common “post/comment” button clicks.
-- Text extraction from active composer.
-- Basic platform state storage (connected/monitor toggles).
-- Video detection + best-effort video fetch + local transcription request (`/transcribe-video`).
-- ML backend skeleton using FastAPI + Faster-Whisper.
+---
 
-### Features left to implement
+## 📁 Repository Walkthrough
 
-- **Image + video content understanding (true “analysis”)**
-  - Transcription is only one step; actual _privacy-risk inference_ on multimedia still needs to be built.
-  - Image analysis (OCR + sensitive visual entity detection) is currently out of scope / hard.
-- **Real risk model integration**
-  - Replace the `get_risk_level_from_model` stub with an actual model call.
-  - Define what “bunch of data” means (windowing, summarization, entity extraction) before sending to the model.
-- **User-facing UX for prevention**
-  - Show warnings in-context (near composer) and/or in popup.
-  - Optional “block publish until reviewed” mode.
-- **Platform-by-platform hardening**
-  - Each social platform has different composer DOM and upload flows; scrapers/monitors need iteration.
+```
+privAI/
+├── extension/          # WXT Browser Extension (React + Tailwind)
+├── frontend/           # React Web Application (Vite + React Router)
+├── ml-backend/         # Python FastAPI ML Services
+└── backend/            # Planned Node.js API Backend (Empty Placeholder)
+```
 
-## Future enhancements (ideas)
+### 1. Browser Extension (`extension/`)
+The extension utilizes the [WXT framework](https://wxt.dev/) with React and Tailwind CSS.
 
-Beyond privacy/PII protection, the longer-term vision is to detect and prevent harmful or policy-violating posts at the time of creation, such as:
+*   **`entrypoints/`**:
+    *   [background.js](file:///d:/Projects/privAI/extension/entrypoints/background.js): Coordinates OAuth/Connect flows, listens for tab updates/removals, and saves platform settings to browser local storage.
+    *   [content.js](file:///d:/Projects/privAI/extension/entrypoints/content.js): Injected into every page. Initializes DOM listeners and responds to background connection requests.
+    *   `popup/`: The popup window container. Contains the main entrypoint and stylesheet for the popup panel.
+*   **`components/content/`**:
+    *   [account-helpers.js](file:///d:/Projects/privAI/extension/components/content/account-helpers.js): Extracts active social handles/IDs from URLs and DOM landmarks (LinkedIn profile pages, Facebook URLs, Instagram anchors).
+    *   [data-scrapers.js](file:///d:/Projects/privAI/extension/components/content/data-scrapers.js): Scrapes text from elements containing `role="textbox"`. It also detects `<video>` tags, downloads the media stream, and POSTs it to the ML backend for audio transcription.
+    *   [monitoring-helpers.js](file:///d:/Projects/privAI/extension/components/content/monitoring-helpers.js): Intercepts user click actions on buttons labeled "Post", "Share", "Tweet", "Reply", or "Send".
+*   **`components/background/`**:
+    *   `linkedin-events.js`, `facebook-events.js`, `instagram-events.js`: Implement the discrete state machines that open login pages, wait for successful authentication redirects, and message content scripts to capture identity metrics.
+*   **`components/ui/`**:
+    *   [Platforms.jsx](file:///d:/Projects/privAI/extension/components/ui/Platforms.jsx): Renders the toggle switches and action buttons for connecting and configuring active sites.
+    *   [Theme.jsx](file:///d:/Projects/privAI/extension/components/ui/Theme.jsx): Implements theme switching with support for Light, Dark, Purple, and Teal colorways.
+*   **`components/shared/`**:
+    *   [constants.js](file:///d:/Projects/privAI/extension/components/shared/constants.js): Global settings, configurations, default object models, and chrome storage helpers.
 
-- Harassment / threats / targeted abuse
-- Incitement, protest/riot violence signals (context-sensitive)
-- Defamation / “bad-mouthing” and other reputational harm patterns
+---
 
-This would require careful policy design, transparency, and false-positive management.
+### 2. Frontend Dashboard (`frontend/`)
+A dashboard created with React, Vite, Tailwind CSS, and React Router. It functions as the administration panel for user profile specifications.
 
-## Repository structure
+*   **`src/pages/`**:
+    *   [LandingPage.jsx](file:///d:/Projects/privAI/frontend/src/pages/LandingPage.jsx): Marketing entry point explaining the privacy-protecting capabilities of `privAI`.
+    *   [LoginPage.jsx](file:///d:/Projects/privAI/frontend/src/pages/LoginPage.jsx) & [SignupPage.jsx](file:///d:/Projects/privAI/frontend/src/pages/SignupPage.jsx): Registration forms.
+    *   [DashboardPage.jsx](file:///d:/Projects/privAI/frontend/src/pages/DashboardPage.jsx): The main interactive interface. It renders:
+        *   **PII & Monitoring Profiles**: View and edit fields (e.g., Username, Work Email, Personal Email Lists, Phone Numbers) that the extension monitors.
+        *   **Risk Metric Widgets**: Cards representing "Total Incidents", "Monitored Emails", and "Monitored Phone Numbers".
+        *   **Interactive Bar Chart**: Visualizes monthly exposure incidents split by PII categories (Email, Phone, Address).
+*   **`src/api/auth.js`**:
+    *   Simulates database communication via `localStorage` fallbacks (mocking `getUserProfile`, `updateUserProfile`, `getRiskData`). These functions are ready to be wired up to actual backend endpoints.
 
-- `extension/` — the browser extension (WXT + React + Tailwind)
-  - `entrypoints/` contains background/content/popup entrypoints
-  - `components/content/` contains DOM monitoring + scrapers
-  - `components/background/` contains platform connect flows (e.g., LinkedIn)
-  - `components/ui/` contains extension UI components
-- `frontend/` — a separate React (Vite) web UI (auth pages + dashboard shell)
-- `ml-backend/` — FastAPI service for ML-assisted features (e.g., transcription, risk scoring)
-- `backend/` — placeholder (currently empty)
+---
 
-## Local development
+### 3. ML Backend (`ml-backend/`)
+A Python service using FastAPI to run audio extraction and speech-to-text models.
 
-### 1) Extension
+*   **`main_copy.py`**:
+    *   `POST /transcribe-video`: Receives an MP4 upload, runs `ffmpeg` asynchronously to strip the video and output a `16kHz` mono `.wav` file, and feeds the wav to `Faster-Whisper` (small model configuration).
+    *   `POST /analyze-risk`: A placeholder endpoint designed to run PII / sensitivity categorization on scraped text.
+    *   `notify_medium_high_risk()`: Communicates with an external Node notification server (`http://localhost:3001`) whenever medium or high-risk posts are intercepted.
 
-From `extension/`:
+---
 
-- Install deps: `npm install`
-- Dev (Chrome): `npm run dev`
-- Dev (Firefox): `npm run dev:firefox`
+## 🛠️ Local Development & Setup
 
-WXT will output a dev extension build you can load into your browser (Chrome/Firefox extension dev workflow).
+### 1) Browser Extension
+```bash
+cd extension
+npm install
+npm run dev          # Launches WXT dev server (default is Chrome)
+npm run dev:firefox  # Launches WXT dev server in Firefox
+```
+*Load the output extension files under the `.output` directory into your browser's Developer Extensions panel.*
 
-### 2) Frontend
+### 2) Web Frontend Dashboard
+```bash
+cd frontend
+npm install
+npm run dev          # Spins up Vite local dev environment (typically http://localhost:5173)
+```
 
-From `frontend/`:
+### 3) ML Backend
+Ensure you have `ffmpeg` installed and available in your system's environment `PATH` variable.
+```bash
+cd ml-backend
+# Set up a python virtual environment
+python -m venv ml-venv
+ml-venv\Scripts\activate   # On Windows
+source ml-venv/bin/activate # On Unix/macOS
 
-- Install deps: `npm install`
-- Run dev server: `npm run dev`
+pip install -r requirements.txt
+uvicorn main_copy:app --reload --port 8000
+```
+*Note: Faster-Whisper is configured by default for CUDA execution (`device="cuda"`). Update `main_copy.py` (line 20) to `device="cpu"` if running on non-GPU instances.*
 
-### 3) ML backend
+---
 
-From `ml-backend/`:
-
-- Create/activate a Python environment
-- Install deps: `pip install -r requirements.txt`
-- Run API (example): `uvicorn main_copy:app --reload --port 8000`
-
-Notes:
-
-- `ffmpeg` must be installed and available on `PATH` for `/transcribe-video`.
-- Faster-Whisper is currently configured for CUDA (`device="cuda"`). If you don’t have a compatible GPU setup, you’ll need to adjust the configuration.
-- CORS in the ML backend is currently restricted to `http://127.0.0.1:3000` and may need to be updated depending on where your UI runs.
-
-## Current limitations
-
-- Risk scoring is not wired to a real model yet (the API returns a placeholder).
-- Multimedia “analysis” is not implemented beyond basic transcription.
-- Platform-specific DOM differences may cause unreliable capture on some sites.
-
-## Contributing
-
-This repo is early-stage and evolving. If you’re contributing, keep changes minimal and focus on one capability at a time (monitoring → extraction → analysis → UX prevention).
+## ⚠️ Current Implementation Gaps & Next Steps
+- **Model Integration**: The `/analyze-risk` endpoint currently returns a static stub. It needs to be replaced with a real fine-tuned risk model.
+- **Unified Node Backend**: The `backend/` folder is empty. A shared database/API layer needs to be implemented to synchronize monitored profiles from the dashboard to the browser extension (rather than using independent storage).
+- **DOM Robustness**: Social media websites frequently alter class names and DOM structures. Scrapers in `data-scrapers.js` require continuous monitoring and refinement.
