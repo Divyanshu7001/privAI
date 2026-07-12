@@ -1,25 +1,22 @@
-import { FaFacebook, FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
 
-export const PLATFORMS = ["linkedin", "facebook", "instagram", "twitter", "x"];
+export const PLATFORMS = ["linkedin", "facebook", "instagram"];
 
 export const INITIAL_PLATFORMS = {
   facebook: { name: "Facebook", connected: false, enabled: false },
   instagram: { name: "Instagram", connected: false, enabled: false },
-  twitter: { name: "Twitter", connected: false, enabled: false },
   linkedin: { name: "LinkedIn", connected: false, enabled: false },
 };
 
 export const PLATFORM_ICONS = {
   facebook: FaFacebook,
   instagram: FaInstagram,
-  twitter: FaTwitter,
   linkedin: FaLinkedin,
 };
 
 export const PLATFORM_COLORS = {
   facebook: "text-[#1877F2] bg-[#E8F1FF]",
   instagram: "text-[#E1306C] bg-[#FFE6F0]",
-  twitter: "text-[#1DA1F2] bg-[#E5F4FF]",
   linkedin: "text-[#0A66C2] bg-[#E3F0FF]",
 };
 
@@ -70,12 +67,6 @@ export const DEFAULT_PLATFORM_STATE = {
     accountName: null,
   },
   instagram: {
-    connected: false,
-    monitor: false,
-    accountId: null,
-    accountName: null,
-  },
-  twitter: {
     connected: false,
     monitor: false,
     accountId: null,

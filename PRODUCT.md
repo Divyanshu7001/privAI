@@ -9,7 +9,7 @@ product
 web
 
 ## Users
-Everyday internet users and professionals posting on social media (LinkedIn, Facebook, Instagram, Twitter/X) who need to protect their sensitive personal information (PII) and corporate data from accidental public exposure. They need a non-intrusive assistant that runs quietly in the background and only intervenes when a privacy risk is detected.
+Everyday internet users and professionals posting on social media (LinkedIn, Facebook, Instagram) who need to protect their sensitive personal information (PII) and corporate data from accidental public exposure. They need a non-intrusive assistant that runs quietly in the background and only intervenes when a privacy risk is detected.
 
 ## Product Purpose
 A client-side privacy assistant consisting of a browser extension and dashboard. It intercepts post publications, transcribes video audio, and scans text locally to flag sensitive data before publishing, helping users track and reduce their cumulative exposure risk.

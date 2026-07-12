@@ -1,8 +1,8 @@
 import React from "react";
 
-function Input({ label, helper, required, ...props }) {
+function Input({ label, helper, required, className = "", ...props }) {
   return (
-    <label className="block text-sm text-text-secondary space-y-1">
+    <label className={`block text-sm text-text-secondary space-y-1 ${className}`}>
       {label && (
         <span>
           {label}

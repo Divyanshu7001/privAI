@@ -12,6 +12,7 @@ export default defineConfig({
     name: "privAI",
     description: "Saving you from sharing private info online.",
     version: "0.0.0",
-    permissions: ["storage", "tabs", "scripting"],
+    permissions: ["storage", "tabs", "scripting", "cookies"],
+    host_permissions: ["http://localhost/*"],
   },
 });

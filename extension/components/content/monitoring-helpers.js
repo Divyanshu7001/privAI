@@ -8,7 +8,6 @@ import {
 let linkedInListenersAttached = false;
 let facebookListenersAttached = false;
 let instagramListenersAttached = false;
-let twitterListenersAttached = false;
 
 const normaliseLabel = (el) => {
   if (!el) return "";
@@ -31,9 +30,6 @@ const setupMonitors = (siteName) => {
   } else if (siteName === "instagram") {
     if (instagramListenersAttached) return;
     instagramListenersAttached = true;
-  } else if (siteName === "twitter") {
-    if (twitterListenersAttached) return;
-    twitterListenersAttached = true;
   }
   console.log(
     `[privAI][${siteName}] Initialising monitoring for posts and comments`
@@ -54,7 +50,6 @@ const setupMonitors = (siteName) => {
         "share",
         "start a post",
         "publish",
-        "tweet",
         "reply",
         "send",
       ];
@@ -85,8 +80,7 @@ const setupMonitors = (siteName) => {
 const platformSelectors = {
   linkedin: "div.feed-shared-update-v2, article",
   facebook: "div[role='article'], [data-ad-preview='message']",
-  instagram: "article",
-  twitter: "article[data-testid='tweet']"
+  instagram: "article"
 };
 
 const injectCSS = () => {
@@ -356,6 +350,18 @@ const startBlurringSimulation = (siteName) => {
             </div>
           `;
           
+          // Log initial block to backend
+          if (typeof browser !== "undefined" && browser.runtime?.sendMessage) {
+            browser.runtime.sendMessage({
+              type: "privai:logIncident",
+              platform: siteName,
+              type: "text",
+              title: "Blocked Feed Post",
+              remarks: randomWarning,
+              action: "acknowledged"
+            }).catch(e => console.warn("[privAI] Failed to log incident:", e));
+          }
+          
           // Apply heavy blur to content children
           childrenToBlur.forEach(child => {
             child.style.filter = "blur(28px)";
@@ -368,6 +374,19 @@ const startBlurringSimulation = (siteName) => {
               childrenToBlur.forEach(child => {
                 child.style.filter = "none";
               });
+              
+              // Log continued override to backend
+              if (typeof browser !== "undefined" && browser.runtime?.sendMessage) {
+                browser.runtime.sendMessage({
+                  type: "privai:logIncident",
+                  platform: siteName,
+                  type: "text",
+                  title: "Blocked Feed Post",
+                  remarks: randomWarning,
+                  action: "continued anyway"
+                }).catch(e => console.warn("[privAI] Failed to update incident log:", e));
+              }
+              
               setTimeout(() => {
                 overlay.remove();
               }, 500);
@@ -406,6 +425,22 @@ export const monitoringInitializer = async () => {
   console.log("[privAI] Current host:", hostname, "→ siteName:", siteName);
 
   if (PLATFORMS.includes(siteName)) {
+    // Check global monitoring authorization first
+    let allowed = false;
+    if (typeof browser !== "undefined" && browser.storage?.local) {
+      try {
+        const res = await browser.storage.local.get("monitoringAllowed");
+        allowed = !!res.monitoringAllowed;
+      } catch (e) {
+        console.warn("[privAI] Failed to read monitoringAllowed:", e);
+      }
+    }
+    
+    if (!allowed) {
+      console.log(`[privAI][${siteName}] General monitoring not authorized; skipping.`);
+      return siteName;
+    }
+
     const platformStates = await loadPlatformsState();
     const state = platformStates[siteName];
 
@@ -416,7 +451,24 @@ export const monitoringInitializer = async () => {
       return siteName;
     }
     setupMonitors(siteName);
-    startBlurringSimulation(siteName);
+    
+    // Check if user is authenticated (real-time synced from cookies)
+    let isAuthenticated = false;
+    if (typeof browser !== "undefined" && browser.storage?.local) {
+      try {
+        const authStore = await browser.storage.local.get("isAuthenticated");
+        isAuthenticated = !!authStore.isAuthenticated;
+      } catch (e) {
+        console.warn("[privAI] Failed to read isAuthenticated from storage:", e);
+      }
+    }
+
+    if (isAuthenticated) {
+      console.log(`[privAI][${siteName}] User authenticated; enabling feed filtering simulation.`);
+      startBlurringSimulation(siteName);
+    } else {
+      console.log(`[privAI][${siteName}] User not authenticated; skipping feed filtering simulation.`);
+    }
   }
   return siteName;
 };

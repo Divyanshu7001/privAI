@@ -7,3 +7,9 @@ build
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
+
+*.pdf
+*.docx
+*.java
+*.class
+*.env

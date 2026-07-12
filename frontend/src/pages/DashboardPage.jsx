@@ -154,7 +154,7 @@ function DashboardPage() {
 
   // Metrics computing
   const platformMetrics = useMemo(() => {
-    const counts = { linkedin: 0, facebook: 0, instagram: 0, twitter: 0 };
+    const counts = { linkedin: 0, facebook: 0, instagram: 0 };
     incidents.forEach((inc) => {
       const plat = inc.platform.toLowerCase();
       if (counts[plat] !== undefined) {
@@ -487,7 +487,7 @@ function DashboardPage() {
                 </div>
 
                 {/* Platforms Grid (Remaining 3 columns) */}
-                <div className="md:col-span-3 grid grid-cols-2 gap-4">
+                <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* LinkedIn */}
                   <div className="rounded-2xl border border-border bg-card p-4 flex flex-col justify-between hover:border-brand/40 transition">
                     <p className="text-xs font-semibold text-text-secondary">LinkedIn Risks</p>
@@ -522,19 +522,6 @@ function DashboardPage() {
                         {platformMetrics.instagram}
                       </p>
                       <span className="text-xs font-semibold text-[#E1306C] bg-[#FFE6F0] dark:bg-[#E1306C]/10 dark:text-[#E1306C] px-2 py-1 rounded-lg">
-                        In Check
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Twitter/X */}
-                  <div className="rounded-2xl border border-border bg-card p-4 flex flex-col justify-between hover:border-brand/40 transition">
-                    <p className="text-xs font-semibold text-text-secondary">Twitter / X Risks</p>
-                    <div className="flex items-end justify-between mt-4">
-                      <p className="text-3xl font-extrabold text-text-primary">
-                        {platformMetrics.twitter}
-                      </p>
-                      <span className="text-xs font-semibold text-text-primary bg-border dark:bg-border px-2 py-1 rounded-lg">
                         In Check
                       </span>
                     </div>

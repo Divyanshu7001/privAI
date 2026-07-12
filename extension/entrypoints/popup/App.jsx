@@ -15,9 +15,29 @@ export const App = () => {
   const [platforms, setPlatforms] = useState(INITIAL_PLATFORMS);
   const [themeOpen, setThemeOpen] = useState(false);
   const [monitoringAllowed, setMonitoringAllowed] = useState(false); // false by default until user authorizes
+  const [authData, setAuthData] = useState({ isAuthenticated: false, user: null });
   const themeStyles = useThemeStyles();
   const { resolvedTheme } = useTheme();
   const isLight = resolvedTheme === "light";
+
+  const checkAuth = async () => {
+    try {
+      if (typeof browser === "undefined" || !browser.storage?.local) {
+        setAuthData({ isAuthenticated: false, user: null });
+        return;
+      }
+
+      const stored = await browser.storage.local.get(["isAuthenticated", "pm_user"]);
+      if (stored.isAuthenticated && stored.pm_user) {
+        setAuthData({ isAuthenticated: true, user: stored.pm_user });
+      } else {
+        setAuthData({ isAuthenticated: false, user: null });
+      }
+    } catch (e) {
+      console.warn("[privAI][popup] Failed to read auth storage:", e);
+      setAuthData({ isAuthenticated: false, user: null });
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -66,6 +86,31 @@ export const App = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    checkAuth();
+
+    const handleStorageChange = (changes, areaName) => {
+      if (areaName === "local") {
+        if (changes.isAuthenticated || changes.pm_user) {
+          checkAuth();
+        }
+        if (changes.monitoringAllowed) {
+          setMonitoringAllowed(!!changes.monitoringAllowed.newValue);
+        }
+      }
+    };
+
+    if (typeof browser !== "undefined" && browser.storage?.onChanged) {
+      browser.storage.onChanged.addListener(handleStorageChange);
+    }
+
+    return () => {
+      if (typeof browser !== "undefined" && browser.storage?.onChanged) {
+        browser.storage.onChanged.removeListener(handleStorageChange);
+      }
+    };
+  }, []);
+
   const persistMonitoringAllowed = async (value) => {
     setMonitoringAllowed(value);
     if (typeof browser !== "undefined" && browser.storage?.local) {
@@ -91,9 +136,10 @@ export const App = () => {
           themeStyles={themeStyles}
           isLight={isLight}
           setThemeOpen={setThemeOpen}
+          authData={authData}
         />
 
-        {!monitoringAllowed && (
+        {!monitoringAllowed ? (
           <div className="mt-2 rounded-lg border border-amber-400 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
             <p className="mb-1 font-medium">
               Monitoring is currently disabled.
@@ -110,6 +156,40 @@ export const App = () => {
               Authorize monitoring
             </button>
           </div>
+        ) : (
+          !authData.isAuthenticated && (
+            <div className={`mt-2 rounded-xl border p-4 text-[12px] leading-relaxed ${
+              isLight 
+                ? "border-violet-200 bg-violet-50/50 text-zinc-700" 
+                : "border-violet-500/20 bg-violet-500/5 text-zinc-300"
+            }`}>
+              <p>
+                Want Feed filtering of unwanted content & history dashboard?{" "}
+                <a
+                  href="http://localhost:5173/register"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`font-semibold underline transition-colors ${
+                    isLight ? "text-violet-700 hover:text-violet-800" : "text-violet-400 hover:text-violet-300"
+                  }`}
+                >
+                  Create account
+                </a>{" "}
+                or{" "}
+                <a
+                  href="http://localhost:5173/login"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`font-semibold underline transition-colors ${
+                    isLight ? "text-violet-700 hover:text-violet-800" : "text-violet-400 hover:text-violet-300"
+                  }`}
+                >
+                  login to your existing account
+                </a>
+                .
+              </p>
+            </div>
+          )
         )}
 
         <ThemeSelector open={themeOpen} onClose={() => setThemeOpen(false)} />
